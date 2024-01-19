@@ -2,9 +2,11 @@ package com.practica.omar.auth.filter;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.jsonwebtoken.Jwts;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -86,12 +88,20 @@ protected void successfulAuthentication(HttpServletRequest request, HttpServletR
             // extraer el nombre del usuario del objeto authentification
             String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal()).getUsername();
  
-            // la cadena ayuda para como base para generar el token
-            String originalInput = SECRET_KEY+":"+ username;
-            
-            //crea un token codificado en base 64, pero esto no es recomendable para produccion
-            String token = Base64.getEncoder().encodeToString(originalInput.getBytes());
+//            // la cadena ayuda para como base para generar el token
+//            String originalInput = SECRET_KEY+":"+ username;
+//
+//            //crea un token codificado en base 64, pero esto no es recomendable para produccion
+//            String token = Base64.getEncoder().encodeToString(originalInput.getBytes());
 
+
+    // creamos el token con el usuario, la clave secreta, el tipo de inicio y expiracoin
+    String token = Jwts.builder()
+            .setSubject(username)
+            .signWith(SECRET_KEY)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+            .compact();
             // agrega el token como encabezado de authorization de la respuesta HTTP
             response.addHeader(HEADER_AUTHORIZATION,PREFIX_TOKEN+ token);
 
@@ -109,7 +119,7 @@ protected void successfulAuthentication(HttpServletRequest request, HttpServletR
             response.setContentType("application/json");
 }
 
-// nos da cuando la authentificacion es fallida
+// nos da cuando la authentificac ion es fallida
 
 @Override
 protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
